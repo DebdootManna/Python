@@ -1,0 +1,7 @@
+title,author,genre,price,type,tax_rate,shipping_cost
+The Great Gatsby,F. Scott Fitzgerald,Fiction,10.99,ebook,0.1,
+To Kill a Mockingbird,Harper Lee,Fiction,12.50,printed,,5.0
+1984,George Orwell,Science Fiction,8.99,ebook,0.15,
+Pride and Prejudice,Jane Austen,Romance,9.99,printed,,3.5
+The Catcher in the Rye,J.D. Salinger,Fiction,11.25,ebook,0.12,
+The Hobbit,J.R.R. Tolkien,Fantasy,14.99,printed,,6.0
