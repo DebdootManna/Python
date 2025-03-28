@@ -1,0 +1,4 @@
+978-0132350884|Clean Code: A Handbook of Agile Software Craftsmanship|Robert C. Martin|35.99|50
+978-0201633610|Design Patterns: Elements of Reusable Object-Oriented Software|Erich Gamma|55.50|30
+978-0321125217|Domain-Driven Design: Tackling Complexity in the Heart of Software|Eric Evans|40.75|25
+978-1491957660|Python Crash Course: A Hands-On, Project-Based Introduction to Programming|Eric Matthes|29.99|100
