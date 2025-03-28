@@ -1,198 +1,162 @@
 import sqlite3
-import os
-from datetime import datetime
 
 # === Database Setup ===
 def create_connection():
-    """Connect to SQLite database. Create if not exists."""
+    """Connect to the SQLite database."""
     try:
-        conn = sqlite3.connect('bookstore.db')
+        conn = sqlite3.connect('students.db')
         return conn
     except sqlite3.Error as e:
         print(f"Database error: {e}")
         return None
 
-def initialize_database():
-    """Create tables for books, customers, and orders."""
+def create_table():
+    """Create the 'students' table if it doesn't exist."""
     conn = create_connection()
     if conn:
         try:
             cursor = conn.cursor()
-            cursor.execute('''CREATE TABLE IF NOT EXISTS books (
-                            isbn TEXT PRIMARY KEY,
-                            title TEXT NOT NULL,
-                            author TEXT,
-                            price REAL,
-                            quantity INTEGER
-                        )''')
-            
-            cursor.execute('''CREATE TABLE IF NOT EXISTS customers (
-                            customer_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            cursor.execute('''CREATE TABLE IF NOT EXISTS students (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
                             name TEXT NOT NULL,
-                            email TEXT UNIQUE
-                        )''')
-            
-            cursor.execute('''CREATE TABLE IF NOT EXISTS orders (
-                            order_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                            customer_id INTEGER,
-                            book_isbn TEXT,
-                            quantity INTEGER,
-                            order_date TEXT,
-                            FOREIGN KEY (customer_id) REFERENCES customers(customer_id),
-                            FOREIGN KEY (book_isbn) REFERENCES books(isbn)
+                            age INTEGER,
+                            email TEXT
                         )''')
             conn.commit()
-            print("Database initialized successfully!")
+            print("Table 'students' created successfully!")
         except sqlite3.Error as e:
             print(f"Table creation error: {e}")
         finally:
             conn.close()
 
-# === File Handling ===
-def export_books_to_file(filename="books_export.txt"):
-    """Export books to a text file."""
-    conn = create_connection()
-    try:
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM books")
-        books = cursor.fetchall()
-        with open(filename, 'w') as f:
-            for book in books:
-                f.write(f"{book[0]}|{book[1]}|{book[2]}|{book[3]}|{book[4]}\n")
-        print(f"Books exported to {filename}!")
-    except Exception as e:
-        print(f"Export error: {e}")
-    finally:
-        conn.close()
-
-def import_books_from_file(filename="books_import.txt"):
-    """Import books from a text file."""
-    conn = create_connection()
-    try:
-        cursor = conn.cursor()
-        with open(filename, 'r') as f:
-            for line in f:
-                data = line.strip().split('|')
-                isbn, title, author, price, quantity = data
-                cursor.execute('''INSERT INTO books (isbn, title, author, price, quantity)
-                                VALUES (?, ?, ?, ?, ?)''', 
-                                (isbn, title, author, float(price), int(quantity)))
-        conn.commit()
-        print(f"Books imported from {filename}!")
-    except FileNotFoundError:
-        print("File not found!")
-    except Exception as e:
-        print(f"Import error: {e}")
-    finally:
-        conn.close()
-
 # === Core Functions ===
-def add_book():
-    """Add a new book to the inventory."""
+def add_student():
+    """Add a new student to the database."""
     conn = create_connection()
+    name = input("Enter student name: ")
+    age = int(input("Enter student age: "))
+    email = input("Enter student email: ")
     try:
-        isbn = input("Enter ISBN: ")
-        title = input("Enter title: ")
-        author = input("Enter author: ")
-        price = float(input("Enter price: "))
-        quantity = int(input("Enter quantity: "))
-        
         cursor = conn.cursor()
-        cursor.execute('''INSERT INTO books (isbn, title, author, price, quantity)
-                        VALUES (?, ?, ?, ?, ?)''', 
-                        (isbn, title, author, price, quantity))
+        cursor.execute('''INSERT INTO students (name, age, email)
+                        VALUES (?, ?, ?)''', (name, age, email))
         conn.commit()
-        print("Book added successfully!")
+        print("Student added successfully!")
     except ValueError:
-        print("Invalid input! Price/quantity must be numbers.")
-    except sqlite3.IntegrityError:
-        print("Book with this ISBN already exists!")
+        print("Invalid input! Age must be a number.")
     finally:
         conn.close()
 
-def browse_books():
-    """Display all books in inventory."""
+def update_student():
+    """Update a student's record by ID."""
     conn = create_connection()
+    student_id = int(input("Enter student ID to update: "))
+    new_name = input("Enter new name (leave blank to skip): ")
+    new_age = input("Enter new age (leave blank to skip): ")
+    new_email = input("Enter new email (leave blank to skip): ")
     try:
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM books")
-        books = cursor.fetchall()
-        print("\n=== Available Books ===")
-        for book in books:
-            print(f"ISBN: {book[0]}\nTitle: {book[1]}\nAuthor: {book[2]}\nPrice: ${book[3]}\nStock: {book[4]}\n")
-    except sqlite3.Error as e:
-        print(f"Database error: {e}")
-    finally:
-        conn.close()
-
-def place_order():
-    """Place an order and update inventory."""
-    conn = create_connection()
-    try:
-        # Get customer details
-        name = input("Enter your name: ")
-        email = input("Enter your email: ")
-        
-        # Add customer to database
-        cursor = conn.cursor()
-        cursor.execute('''INSERT INTO customers (name, email) 
-                        VALUES (?, ?)''', (name, email))
-        customer_id = cursor.lastrowid
-        
-        # Get book details
-        browse_books()
-        isbn = input("Enter book ISBN: ")
-        quantity = int(input("Enter quantity: "))
-        
-        # Check book availability
-        cursor.execute("SELECT quantity FROM books WHERE isbn = ?", (isbn,))
-        stock = cursor.fetchone()[0]
-        if stock < quantity:
-            print("Insufficient stock!")
-            return
-        
-        # Update inventory and create order
-        new_stock = stock - quantity
-        cursor.execute('''UPDATE books SET quantity = ? 
-                        WHERE isbn = ?''', (new_stock, isbn))
-        order_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        cursor.execute('''INSERT INTO orders (customer_id, book_isbn, quantity, order_date)
-                        VALUES (?, ?, ?, ?)''', 
-                        (customer_id, isbn, quantity, order_date))
-        conn.commit()
-        print("Order placed successfully!")
+        updates = []
+        params = []
+        if new_name:
+            updates.append("name = ?")
+            params.append(new_name)
+        if new_age:
+            updates.append("age = ?")
+            params.append(int(new_age))
+        if new_email:
+            updates.append("email = ?")
+            params.append(new_email)
+        params.append(student_id)
+        if updates:
+            query = f"UPDATE students SET {', '.join(updates)} WHERE id = ?"
+            cursor.execute(query, params)
+            conn.commit()
+            print("Student updated successfully!")
+        else:
+            print("No fields updated.")
     except ValueError:
         print("Invalid input!")
+    finally:
+        conn.close()
+
+def delete_student():
+    """Delete a student by ID."""
+    conn = create_connection()
+    student_id = int(input("Enter student ID to delete: "))
+    try:
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM students WHERE id = ?", (student_id,))
+        conn.commit()
+        print("Student deleted successfully!")
+        # SCREENSHOT 5: Deleting a student in terminal
     except sqlite3.Error as e:
-        print(f"Order failed: {e}")
+        print(f"Deletion error: {e}")
+    finally:
+        conn.close()
+
+def display_students():
+    """Display all students."""
+    conn = create_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM students")
+        students = cursor.fetchall()
+        print("\n=== Student List ===")
+        for student in students:
+            print(f"ID: {student[0]}, Name: {student[1]}, Age: {student[2]}, Email: {student[3]}")
+    except sqlite3.Error as e:
+        print(f"Fetch error: {e}")
+    finally:
+        conn.close()
+
+def search_student():
+    """Search students by name, age, or email."""
+    conn = create_connection()
+    search_term = input("Search by name, age, or email: ")
+    try:
+        cursor = conn.cursor()
+        cursor.execute('''SELECT * FROM students 
+                        WHERE name LIKE ? OR age = ? OR email LIKE ?''', 
+                        (f'%{search_term}%', search_term, f'%{search_term}%'))
+        results = cursor.fetchall()
+        if results:
+            print("\n=== Search Results ===")
+            for student in results:
+                print(f"ID: {student[0]}, Name: {student[1]}, Age: {student[2]}, Email: {student[3]}")
+            # SCREENSHOT 7: Search results in terminal
+        else:
+            print("No matching records found.")
+    except sqlite3.Error as e:
+        print(f"Search error: {e}")
     finally:
         conn.close()
 
 # === Menu System ===
 def display_menu():
-    print("\n===== Online Bookstore =====")
-    print("1. Browse Books")
-    print("2. Place Order")
-    print("3. Add New Book")
-    print("4. Export Books to File")
-    print("5. Import Books from File")
+    print("\n===== Student Management System =====")
+    print("1. Add Student")
+    print("2. Update Student")
+    print("3. Delete Student")
+    print("4. Display All Students")
+    print("5. Search Student")
     print("6. Exit")
 
 def main():
-    initialize_database()
+    create_table()
     while True:
         display_menu()
         choice = input("Enter your choice (1-6): ")
         if choice == '1':
-            browse_books()
+            add_student()
         elif choice == '2':
-            place_order()
+            update_student()
         elif choice == '3':
-            add_book()
+            delete_student()
         elif choice == '4':
-            export_books_to_file()
+            display_students()
         elif choice == '5':
-            import_books_from_file()
+            search_student()
         elif choice == '6':
             print("Exiting...")
             break
