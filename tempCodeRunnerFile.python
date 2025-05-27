@@ -1,0 +1,25 @@
+# tuple_examples.py
+
+# Create tuples
+t1 = (1, 2, 3, 4)
+t2 = ("apple",)               # Single-element needs comma
+t3 = (1, "b", 3.5, True)
+
+# Access elements
+first = t1[0]                 # 1
+last = t1[-1]                 # 4
+
+# Slicing
+sub = t3[1:3]                 # ("b", 3.5)
+
+# Count & index
+count_2 = t1.count(2)         # 1
+idx_3 = t1.index(3)           # 2
+
+# Built-ins
+length = len(t3)              # 4
+
+# Unpacking
+a, b, c, d = t1               # a=1, b=2, c=3, d=4
+
+print(t1)
